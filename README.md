@@ -226,3 +226,4 @@ Este projeto pode ser utilizado livremente para automação e melhoria de ambien
 # 👨‍💻 Autor
 
 Script desenvolvido para automatizar a criação de dependências entre triggers em ambientes de monitoramento baseados em Zabbix.
+www.linkedin.com/in/thyago-hyvo
