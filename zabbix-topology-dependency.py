@@ -14,6 +14,7 @@ Evitar alertas em cascata no monitoramento quando um equipamento
 principal fica indisponível.
 
 Autor: Thyago Hyvo
+Link: www.linkedin.com/in/thyago-hyvo
 Licença: MIT
 """
 
@@ -275,4 +276,5 @@ if __name__ == "__main__":
 
     except Exception as e:
         print(f"\nERRO FATAL: {e}")
+
         sys.exit(1)
