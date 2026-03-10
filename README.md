@@ -4,6 +4,9 @@ Script em Python para **automatizar a criação de dependências entre triggers 
 
 Este projeto foi desenvolvido para **reduzir alertas em cascata em ambientes de monitoramento**, onde vários dispositivos dependem de um equipamento principal para conectividade.
 
+```text
+OBS: Embora o exemplo utilize triggers de disponibilidade baseadas em ICMP/Ping, o script foi desenvolvido de forma genérica e pode ser facilmente adaptado para trabalhar com qualquer tipo de trigger definida em templates do ambiente.
+```
 ---
 
 # 📌 Objetivo
