@@ -1,113 +1,228 @@
-# Zabbix-Trigger-Dependency-Automation
-Este script tem como finalidade automatizar a criação de dependências entre triggers de indisponibilidade (ICMP/Ping) no Zabbix, baseado em uma topologia lógica de parent/child.
+# Zabbix Trigger Dependency Automation
 
-Ele é especialmente útil em ambientes onde há:
+Script em Python para **automatizar a criação de dependências entre triggers de indisponibilidade (ICMP/Ping) no Zabbix** utilizando a API.
 
-Um host principal (ex: roteador, concentrador, core, POP)
-Diversos hosts filhos (ex: switches de acesso, rádios, CPEs, etc.)
-Monitoramento via icmpping
-Necessidade de evitar alertas em cascata
+Este projeto foi desenvolvido para **reduzir alertas em cascata em ambientes de monitoramento**, onde vários dispositivos dependem de um equipamento principal para conectividade.
 
-Em ambientes monitorados pelo Zabbix, quando um host principal cai (por exemplo, um roteador principal), todos os hosts filhos também ficam indisponíveis.
+---
+
+# 📌 Objetivo
+
+Automatizar a criação de **dependências entre triggers de disponibilidade** para evitar que o sistema de monitoramento gere múltiplos alertas quando um dispositivo central fica indisponível.
+
+Em muitas redes monitoradas, quando um equipamento principal (como um roteador ou gateway) perde conectividade, diversos dispositivos monitorados atrás dele também deixam de responder.
 
 Sem dependência configurada:
 
-O Zabbix dispara alerta para o parent
-
-Dispara alerta para todos os filhos
-
-Gera múltiplos eventos desnecessários
-
-Polui dashboards e notificações
-
-Aumenta ruído operacional
+* O equipamento principal gera alerta
+* Todos os dispositivos dependentes também geram alerta
+* O monitoramento fica poluído com múltiplos eventos
 
 Com dependência configurada:
 
-Se o parent cair → apenas o alerta do parent é gerado
+* Apenas o dispositivo principal gera o alerta
+* Os dispositivos dependentes ficam automaticamente suprimidos
 
-Os filhos ficam suprimidos automaticamente
+---
 
-Redução significativa de ruído
+# 🧠 Como o Script Funciona
 
-⚙️ O Que o Script Faz
+O script executa as seguintes etapas:
 
-Conecta à API do Zabbix usando API Token
+1. Conecta à API do Zabbix
+2. Localiza o **host principal (parent)**
+3. Identifica automaticamente a **trigger de indisponibilidade**
+4. Busca os hosts dentro de um **host group**
+5. Para cada host encontrado:
 
-Localiza o host principal (parent)
+   * Localiza a trigger de indisponibilidade
+   * Verifica se já existe dependência
+   * Caso não exista, cria a dependência com o host principal
 
-Identifica automaticamente a trigger de indisponibilidade:
+A relação criada será:
 
-Prioriza item icmpping
+```text
+Trigger do Host Filho → depende da Trigger do Host Principal
+```
 
-Caso não encontre, usa regex em descrições (ping, unreachable, etc.)
+---
 
-Busca todos os hosts dentro de um Host Group específico
+# 🏗 Estrutura de Funcionamento
 
-Para cada host filho:
+O script utiliza uma lógica simples baseada em topologia:
 
-Localiza a trigger de indisponibilidade
+```text
+Host Principal
+      │
+      │
+Grupo de Hosts
+      │
+      ├── Dispositivo 1
+      ├── Dispositivo 2
+      ├── Dispositivo 3
+      └── Dispositivo N
+```
 
-Verifica se já existe dependência
+Todos os dispositivos do grupo passam a depender da trigger de indisponibilidade do host principal.
 
-Caso não exista, adiciona dependência via trigger.update
+---
 
+# 🔎 Identificação Automática da Trigger
 
+O script tenta localizar a trigger de indisponibilidade de duas formas.
 
-🏗 Estrutura de Topologia
+### 1. Prioridade: item `icmpping`
 
-O script trabalha com o seguinte modelo lógico:
+Busca triggers associadas ao item:
 
-Parent Host (Ex: TR01FAF-PRINCIPAL)
-        ↓
-Host Group (Ex: TRAPRINCIPAL)
-        ↓
-Hosts Filhos (Switches, Access, etc.)
-
-A dependência criada será:
-Trigger Filho depende da Trigger do Parent
-
-🔎 Critérios de Identificação da Trigger
-
-O script tenta encontrar a trigger de indisponibilidade usando:
-
-Item key:
-
+```
 icmpping
+```
 
-Regex fallback:
+Esse item é normalmente utilizado para monitoramento de disponibilidade via ICMP.
 
+---
+
+### 2. Método alternativo (fallback)
+
+Caso não exista trigger baseada no item, o script procura triggers cujo nome contenha termos relacionados à indisponibilidade.
+
+Expressão utilizada:
+
+```
 (ICMP|ping|unreachable|sem resposta)
+```
 
-Ele sempre prioriza:
+---
 
-Triggers habilitadas
+# ⚙️ Configuração
 
-Maior severidade
+Edite as variáveis no início do script.
 
+```python
+ZABBIX_URL = ""
+API_TOKEN  = ""
+```
 
-Benefícios
+Exemplo:
 
-🔥 Redução de alertas em cascata
+```python
+ZABBIX_URL = "https://zabbix.seu-dominio.com/api_jsonrpc.php"
+API_TOKEN  = "SEU_TOKEN_DE_API"
+```
 
-⚡ Automatização via API
+---
 
-🧠 Inteligência na seleção de trigger
+# 🧩 Definição da Topologia
 
-🛡 Evita erro manual na criação de dependências
+```python
+TOPOLOGY_NAME = "Nome da Topologia"
+PARENT_HOST = "Nome_do_Host_Principal"
+CHILD_GROUP_NAME = "Nome_do_Grupo_de_Hosts"
+```
 
-🔁 Pode ser reutilizado para múltiplas topologias
+Descrição das variáveis:
 
-🛠 Requisitos
+| Variável         | Descrição                                             |
+| ---------------- | ----------------------------------------------------- |
+| TOPOLOGY_NAME    | Nome da topologia (apenas informativo)                |
+| PARENT_HOST      | Host que será considerado o equipamento principal     |
+| CHILD_GROUP_NAME | Grupo de hosts onde estão os dispositivos dependentes |
 
-Python 3.8+
+---
 
-Biblioteca requests
+# 🔍 Filtro Opcional de Hosts
 
-Token de API do Zabbix
+É possível aplicar um filtro para selecionar apenas hosts específicos dentro do grupo.
 
-Permissão para trigger.update
+Exemplo:
 
-Instalação da dependência:
+```python
+CHILD_HOST_FILTER_REGEX = r"^switch-"
+```
 
+Esse exemplo incluiria apenas hosts cujo nome começa com `switch-`.
+
+Caso queira incluir **todos os hosts do grupo**, utilize:
+
+```python
+CHILD_HOST_FILTER_REGEX = None
+```
+
+---
+
+# 📦 Requisitos
+
+* Python 3.8 ou superior
+* Biblioteca `requests`
+
+Instalação:
+
+```bash
 pip install requests
+```
+
+---
+
+# 🚀 Execução
+
+Execute o script com:
+
+```bash
+python script.py
+```
+
+Exemplo de saída:
+
+```
+=== Topologia: Core Network ===
+
+Parent: core-router
+ - Trigger: ICMP ping is unavailable
+
+Grupo: access-switches
+Hosts no grupo: 10 | Filhos selecionados: 9
+
+ - [ADDED] switch-01 -> depende do parent
+ - [ADDED] switch-02 -> depende do parent
+ - [OK]    switch-03 (dependência já existente)
+
+=== RESUMO ===
+Dependências criadas:   2
+Já existentes:          1
+Sem trigger ICMP:       0
+Erros:                  0
+```
+
+---
+
+# 📊 Benefícios
+
+* Redução de alertas em cascata
+* Automatização da configuração de dependências
+* Menor intervenção manual
+* Melhor organização do monitoramento
+* Escalabilidade para ambientes com muitos dispositivos
+
+---
+
+# 🛠 Casos de Uso
+
+Esse script é útil para ambientes que possuem:
+
+* Estruturas de rede hierárquicas
+* Dispositivos dependentes de um gateway ou roteador
+* Monitoramento baseado em ICMP
+* Ambientes com grande quantidade de hosts monitorados
+
+---
+
+# 📄 Licença
+
+Este projeto pode ser utilizado livremente para automação e melhoria de ambientes de monitoramento.
+
+---
+
+# 👨‍💻 Autor
+
+Script desenvolvido para automatizar a criação de dependências entre triggers em ambientes de monitoramento baseados em Zabbix.
