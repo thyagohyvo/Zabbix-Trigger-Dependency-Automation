@@ -1,5 +1,10 @@
 # Zabbix Trigger Dependency Automation
 
+![Python](https://img.shields.io/badge/Python-3.x-blue)
+![API](https://img.shields.io/badge/API-Zabbix-green)
+![Automation](https://img.shields.io/badge/Automation-Network%20Monitoring-orange)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
+
 Script em Python para **automatizar a criação de dependências entre triggers de indisponibilidade (ICMP/Ping) no Zabbix** utilizando a API.
 
 Este projeto foi desenvolvido para **reduzir alertas em cascata em ambientes de monitoramento**, onde vários dispositivos dependem de um equipamento principal para conectividade.
